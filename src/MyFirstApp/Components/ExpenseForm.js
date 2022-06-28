@@ -1,7 +1,11 @@
-import React, { useState } from 'react'
+import React, { useRef, useState } from 'react'
+import ErrorModal from './ErrorModal';
 import styles from './ExpenseForm.module.css'
+import ReactDom from 'react-dom'
 
 const ExpenseForm = (props) => {
+
+    const title = useRef();
 
     const [formValues, setFormValues] = useState({
         title : '',
@@ -11,6 +15,8 @@ const ExpenseForm = (props) => {
     });
 
     const [isInvalid, setIsInvalid] = useState(null);
+    const [errorMsg, setErrorMsg] = useState();
+    const [isHidden, setIsHidden] = useState(true)
 
     const onChangeHandler = (event) => {
 
@@ -28,16 +34,18 @@ const ExpenseForm = (props) => {
 
     const onSubmitHandler = (event) => {
         event.preventDefault();
-
+        console.log(title.current.value);
         for(let key in formValues){
-           if(formValues[key].length == 0){
+           if(formValues[key].trim().length == 0){
+            setErrorMsg( key + " field value is empty");
+            setIsHidden(false);
             return 
            }
         }
 
         props.onSubmitAction({
             ...formValues,
-            id : Math.random()
+            id : Math.random()  
         });
 
         setFormValues( () => {
@@ -50,14 +58,20 @@ const ExpenseForm = (props) => {
 
     }
 
+    const modalCloseClick = () => {
+        setErrorMsg();
+        setIsHidden(true);
+    }
+
 
   return (
     <>
+        {ReactDom.createPortal( <ErrorModal style={isHidden} msg={errorMsg} close={modalCloseClick} />, document.getElementById("errorModal"))}
         <form onSubmit={onSubmitHandler}>
             <div className="form-row">
                 <div className="form-group col-md-6">
                     <label>Title</label>
-                    <input type="text" className={ `form-control ${isInvalid && styles.invalid}` } placeholder="Enter Item" name="title" value={formValues.title} onChange={onChangeHandler} />
+                    <input type="text" className={ `form-control ${isInvalid && styles.invalid}` } placeholder="Enter Item" name="title" ref={title} value={formValues.title} onChange={onChangeHandler} />
                 </div>
                 <div className="form-group col-md-6">
                     <label>Amohnt</label>
